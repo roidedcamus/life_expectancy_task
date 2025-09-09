@@ -120,9 +120,18 @@ def main():
             best_model = model
             best_model_name = name
     
-    print(f"\nBest model: {best_model_name} with MSE: {best_mse:.2f}")
+    # Save ALL models as required by the assignment
+    save_model(models['linear_regression'], '../models/regression_model1.pkl')
+    save_model(models['ridge_alpha_1.0'], '../models/regression_model2.pkl')
+    save_model(models['ridge_alpha_0.1'], '../models/regression_model3.pkl')
     save_model(best_model, '../models/regression_model_final.pkl')
-    print("Model saved to ../models/regression_model_final.pkl")
+
+    print(f"\nBest model: {best_model_name} with MSE: {best_mse:.2f}")
+    print("All models saved to models/ directory:")
+    print("- regression_model1.pkl (Linear Regression)")
+    print("- regression_model2.pkl (Ridge alpha=1.0)") 
+    print("- regression_model3.pkl (Ridge alpha=0.1)")
+    print("- regression_model_final.pkl (Best model: Ridge alpha=10.0)")
 
 if __name__ == "__main__":
     main()
