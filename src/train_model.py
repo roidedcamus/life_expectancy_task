@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from data_preprocessing import preprocess_data
+from data_preprocessing import preprocess_df
 
 # --- MODEL IMPLEMENTATIONS --- 
 class LinearRegression:
@@ -78,7 +78,8 @@ def save_model(model, filepath):
 def main():
     """Main training pipeline."""
     print("Loading and preprocessing data...")
-    X, y = preprocess_data('../data/Life_Expectancy.csv')
+    df = pd.read_csv('../../data/Life Expectancy.csv')
+    X, y = preprocess_df(df)
     
     print("Splitting data into train/validation sets...")
     X_train, X_val, y_train, y_val = train_test_split(X, y)

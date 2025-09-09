@@ -64,7 +64,7 @@ def preprocess_df(df, target='life_expectancy'):
     X = df[feature_names]
     y = df[target]
 
-    return X,y, feature_names
+    return X,y
 
 
 
