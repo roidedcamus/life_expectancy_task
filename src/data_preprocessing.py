@@ -1,5 +1,4 @@
 import pandas as pd 
-import matplotlib as plt
 
 #  FUNCTION DEFINITIONS 
 
@@ -37,39 +36,35 @@ def df_ohe(data, obcols):
 
 #  MAIN 
 
-#read in data into a pandas object
-df = pd.read_csv('../data/Life Expectancy.csv')
-
-#  PREPROCESSING 
+def preprocess_df(df, target='life_expectancy'):
 
 #  remove empty spaces etc from Col names
-#df.rename(columns={"Life expectancy ": "Life_expectancy", do rest})
-
-
+    df.columns = df.columns.str.strip().str.lower().str.replace(r'\s+','_', regex=True)
 #  Missing Values
+    #Firstly, we will remove the 5 rows for which 
+    #the target variable - Life exptectancy is missing
+    df = df.dropna(subset=[target])
 
-#Firstly, we will remove the 5 rows for which 
-#the target variable - Life exptectancy is missing
+    #We will also drop the Hep B and Population columns 
+    #as they have a lot of missing values
 
-df = df.dropna(subset=['Life expectancy '])
+    df = df.drop(columns=['hepatitis_b', 'population'])
 
-#We will also drop the Hep B and Population columns 
-#as they have a lot of missing values
+    nullcols = get_nullcols(df)
+    df = df_impute(df,nullcols)
 
-df = df.drop(columns=['Hepatitis B', 'Population'])
+    #  One-hot Encoding
 
-#print(df['GDP'].describe())
+    objectcols = get_objcols(df)
+    df = df_ohe(df, objectcols)
 
-nullcols = get_nullcols(df)
-df = df_impute(df,nullcols)
+    #  Splitting features and target
 
-#  One-hot Encoding
+    feature_names = [c for c in df.columns if c!= target]
+    X = df[feature_names]
+    y = df[target]
 
-objectcols = get_objcols(df)
-df = df_ohe(df, objectcols)
-
-
-
+    return X,y, feature_names
 
 
 
