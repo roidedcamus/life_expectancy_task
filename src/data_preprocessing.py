@@ -1,70 +1,63 @@
-import pandas as pd 
+import pandas as pd
+import numpy as np
 
 #  FUNCTION DEFINITIONS 
-
 def get_nullcols(data):
-    nc = []
-    for i in data.columns:
-        if data[i].isnull().any():
-            nc.append(i)
-    return nc
+    # Returns list of columns with any missing values
+    return data.columns[data.isnull().any()].tolist()
 
 def df_impute(data, cols):
+    # Fills missing values in specified columns with their median
     for col in cols:
-        median = data[col].median()
-        data[col] = data[col].fillna(median)
+        if data[col].dtype != 'object':  # Only impute numeric columns
+            median = data[col].median()
+            data[col] = data[col].fillna(median)
     return data
 
 def get_objcols(data):
-    objcol = []
-    for col in data.columns:
-        if data[col].dtype == object:
-            if col == 'Country':
-                pass
-            else:
-                objcol.append(col)
-    return objcol
+    # Returns list of all categorical (object type) columns
+    return data.select_dtypes(include=['object']).columns.tolist()
 
 def df_ohe(data, obcols):
-    # does one hot encoding of the object columns
-    # dropping one encoded column as it would be reduntant
-    data = pd.get_dummies(data,columns=obcols, drop_first=True)
-    # dropping the original object columns now
-    data = data.drop(columns=obcols, axis = 1, errors='ignore')
+    # Performs one-hot encoding on categorical columns
+    if obcols:  # Only encode if there are categorical columns
+        data = pd.get_dummies(data, columns=obcols, drop_first=True)
     return data
 
-
-#  MAIN 
-
-def preprocess_df(df, target='life_expectancy'):
-
-#  remove empty spaces etc from Col names
+#  MAIN PREPROCESSING FUNCTION
+def preprocess_df(df, target='Life expectancy'):
+    #  Clean column names: remove spaces, convert to lowercase
     df.columns = df.columns.str.strip().str.lower().str.replace(r'\s+','_', regex=True)
-#  Missing Values
-    #Firstly, we will remove the 5 rows for which 
-    #the target variable - Life exptectancy is missing
+    
+    #  Update target name to match cleaned format
+    target = target.strip().lower().replace(' ', '_')
+    
+    #  Drop rows where target variable is missing
     df = df.dropna(subset=[target])
-
-    #We will also drop the Hep B and Population columns 
-    #as they have a lot of missing values
-
-    df = df.drop(columns=['hepatitis_b', 'population'])
-
+    
+    #  Drop columns with excessive missing values
+    df = df.drop(columns=['hepatitis_b', 'population', 'country'], errors='ignore')
+    
+    #  Handle missing values in numeric columns
     nullcols = get_nullcols(df)
-    df = df_impute(df,nullcols)
-
-    #  One-hot Encoding
-
+    df = df_impute(df, nullcols)
+    
+    #  One-hot encode all categorical variables
     objectcols = get_objcols(df)
     df = df_ohe(df, objectcols)
-
-    #  Splitting features and target
-
-    feature_names = [c for c in df.columns if c!= target]
-    X = df[feature_names]
+    
+    #  Convert ALL data to numeric (force conversion)
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    #  Drop any columns that are all NaN after conversion
+    df = df.dropna(axis=1, how='all')
+    
+    #  Final check for any remaining missing values
+    df = df.fillna(0)  # Fill any remaining NaN with 0
+    
+    #  Split into features (X) and target (y)
+    X = df.drop(columns=[target])
     y = df[target]
 
-    return X,y
-
-
-
+    return X, y
