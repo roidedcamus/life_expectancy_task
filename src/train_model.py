@@ -78,7 +78,7 @@ def save_model(model, filepath):
 def main():
     """Main training pipeline."""
     print("Loading and preprocessing data...")
-    X, y = preprocess_data('../data/Life_Expectancy.csv')
+    X, y = preprocess_data('../data/train_data.csv')
     
     print("Splitting data into train/validation sets...")
     X_train, X_val, y_train, y_val = train_test_split(X, y)
