@@ -15,7 +15,7 @@ class LinearRegression:
         X_with_bias = np.c_[np.ones(X.shape[0]), X]
         
         # Calculate coefficients using normal equation
-        theta = np.linalg.inv(X_with_bias.T.dot(X_with_bias)).dot(X_with_bias.T).dot(y)
+        theta = np.linalg.pinv(X_with_bias.T.dot(X_with_bias)).dot(X_with_bias.T).dot(y)
         
         # Separate intercept and coefficients
         self.intercept = theta[0]
@@ -48,7 +48,7 @@ class RidgeRegression:
         return X.dot(self.coefficients) + self.intercept
 
 class LassoRegression:
-    """Lasso Regression (L1 regularization) via a minimal ISTA solver."""
+    """Lasso Regression (L1 regularization) from scratch."""
     def __init__(self, alpha=1.0):
         self.alpha = alpha
         self.coefficients = None
@@ -132,13 +132,22 @@ def main():
     print("Splitting data into train/validation sets...")
     X_train, X_val, y_train, y_val = train_test_split(X, y)
     
+    # Feature Standardization
+    mean = X_train.mean(axis=0)
+    std = X_train.std(axis=0, ddof = 0).replace(0,1)
+    X_train = (X_train - mean)/std
+    X_val = (X_val - mean)/std
+
+
     print("Training models...")
     models = {
         'linear_regression': LinearRegression(),
-        'ridge_alpha_1.0': RidgeRegression(alpha=1.0),
         'ridge_alpha_0.1': RidgeRegression(alpha=0.1),
-        'ridge_alpha_10.0': RidgeRegression(alpha=10.0),
-        'lasso_alpha_10' : LassoRegression(alpha=10.0),
+        'ridge_alpha_1.0': RidgeRegression(alpha=1.0),
+        'ridge_alpha_3.0': RidgeRegression(alpha=3.0),
+        'ridge_alpha_10.0' : RidgeRegression(alpha=10.0),
+        'lasso_alpha_0.001' : LassoRegression(alpha=0.001),
+        'lasso_alpha_0.01' : LassoRegression(alpha=0.01)
     }
     
     best_mse = float('inf')

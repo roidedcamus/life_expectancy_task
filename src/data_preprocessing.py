@@ -36,8 +36,15 @@ def preprocess_df(df, target='Life expectancy'):
     df = df.dropna(subset=[target])
     
     #  Drop columns with excessive missing values
-    df = df.drop(columns=['hepatitis_b', 'population', 'country'], errors='ignore')
+    #  Also dropping year as it isn't meaningful
+    df = df.drop(columns=['hepatitis_b', 'population', 'country', 'year'], errors='ignore')
     
+    #  Log transforming a few columns
+    for c in ['gdp', 'percentage_expenditure', 'measles', 'infant_deaths', 'under_five_deaths']:
+        if c in df.columns:
+            df[c] = np.log1p(df[c])
+
+
     #  Handle missing values in numeric columns
     nullcols = get_nullcols(df)
     df = df_impute(df, nullcols)
