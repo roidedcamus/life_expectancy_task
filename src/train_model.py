@@ -47,6 +47,42 @@ class RidgeRegression:
         """Make predictions"""
         return X.dot(self.coefficients) + self.intercept
 
+class LassoRegression:
+    """Lasso Regression (L1 regularization) via a minimal ISTA solver."""
+    def __init__(self, alpha=1.0):
+        self.alpha = alpha
+        self.coefficients = None
+        self.intercept = None
+
+    def fit(self, X, y):
+        X = np.asarray(X, dtype=float)
+        y = np.asarray(y, dtype=float)
+        n, d = X.shape
+
+        # center features and target; later recover intercept
+        mu = X.mean(axis=0)
+        Xc = X - mu
+        y_mean = y.mean()
+        yc = y - y_mean
+
+        # step size: 1 / L, where L = largest eigenvalue of Xc^T Xc = (sigma_max)^2
+        smax = np.linalg.svd(Xc, full_matrices=False, compute_uv=False)[0]
+        L = (smax ** 2) if smax > 0 else 1.0
+
+        w = np.zeros(d)
+        for _ in range(500):  # fixed small number of iterations
+            grad = Xc.T @ (Xc @ w - yc)
+            z = w - grad / L
+            # soft-threshold
+            w = np.sign(z) * np.maximum(np.abs(z) - self.alpha / L, 0.0)
+
+        self.coefficients = w
+        self.intercept = y_mean - mu @ w
+
+    def predict(self, X):
+        X = np.asarray(X, dtype=float)
+        return X @ self.coefficients + self.intercept
+
 # --- UTILITY FUNCTIONS ---
 def train_test_split(X, y, test_size=0.2, random_state=42):
     """Split data into training and validation sets."""
@@ -101,7 +137,8 @@ def main():
         'linear_regression': LinearRegression(),
         'ridge_alpha_1.0': RidgeRegression(alpha=1.0),
         'ridge_alpha_0.1': RidgeRegression(alpha=0.1),
-        'ridge_alpha_10.0': RidgeRegression(alpha=10.0)
+        'ridge_alpha_10.0': RidgeRegression(alpha=10.0),
+        'lasso_alpha_10' : LassoRegression(alpha=10.0),
     }
     
     best_mse = float('inf')
