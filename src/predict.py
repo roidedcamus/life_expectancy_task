@@ -23,6 +23,11 @@ def main():
     df = pd.read_csv(args.data_path)
     X, y_true = preprocess_df(df, target='Life expectancy')
     print(f" Data loaded and preprocessed. Shape: {X.shape}")
+
+    # Standardize
+    mean = X.mean(axis=0)
+    std = X.std(axis=0, ddof=0).replace(0, 1)
+    X = (X - mean) / std
     
     # Convert boolean columns to integers
     for col in X.columns:
